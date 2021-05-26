@@ -1,5 +1,4 @@
 const Discord = require("discord.js");
-const tokenfile = require("./tokenfile.json");
 const botconfig = require("./botconfig.json");
 const bot = new Discord.Client({disableEveryone: true});
 var weather = require('weather-js');
@@ -418,4 +417,4 @@ fs.writeFile("./money.json", JSON.stringify(money), (err) => {
     if(err) console.log(err);
 });
 
-bot.login(tokenfile.token);
+bot.login(process.env.BOT_TOKEN);
