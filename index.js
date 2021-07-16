@@ -1,4 +1,5 @@
 const Discord = require("discord.js");
+const tokenfile = require("./tokenfile.json");
 const botconfig = require("./botconfig.json");
 const bot = new Discord.Client({disableEveryone: true});
 var weather = require('weather-js');
@@ -7,6 +8,14 @@ const fs = require("fs");
 const money = require("./money.json");
 const ms = require("ms");
 const { error } = require("console");
+
+const { Player } = require("discord-player");
+
+const player = new Player(bot);
+bot.player = player;
+
+bot.player.on("trackStart", (message, track) => message.channel.send(`Most megy: ${track.title}`))
+bot.player.on("trackAdd", (message, track, queue) => message.channel.send(`${message.content.split(" ").slice(1).join(" ")} hozzá lett adva a várólistához!`))
 
 
 bot.on("guildMemberAdd", (member) => {
@@ -407,8 +416,43 @@ bot.on("message", async message => {
     }
 
 
+
+
+
     
     
+
+
+})
+
+bot.on("message", async (messahe) => {
+    let prefix = "*"
+    const args = message.content.slice(prefix.length).trim().split(/ +/g);
+    const command = args.shift().toLowerCase();
+
+    if(command === "play"){
+        if(!message.member.voice.channel) return message.reply("Te nem vagy bent egy voice csatornában sem!")
+        if(message.guild.me.voice.channel && message.member.voice.channel.id !== message.guild.me.voice.channel.id) return message.reply("Te nem vagy velem egy voice csatornában!")
+        if(!args[0]) return message.reply("Kérlek adj meg egy URL-t vagy egy zene cimet!")
+
+        bot.plazer.play(message, args.join(" "), {firstResult: true}); 
+    }
+    if(command === "queue"){
+        if(!message.member.voice.channel) return message.reply("Te nem vagy bent egy voice csatornában sem!")
+        if(message.guild.me.voice.channel && message.member.voice.channel.id !== message.guild.me.voice.channel.id) return message.reply("Te nem vagy velem egy voice csatornában!")
+
+        const queue = bot.player.getQueue(message);
+
+        if(!bot.player.getQueue(message)) return message.reply("A várólistán nem szerepel semmi!")
+
+        message.channel.send(`**Várólista - ${message.guild.name}\nJelenleg ${queue.playing.title} | ${queue.playing.author}\n\n` + (queue.tracks.map((track, i) => {
+            return `**#${i + 1}** - ${track.title} | ${track.author} (A zenét kérte: ${track.requestedBy.username})`
+            
+        }).slice(0, 5).join('\n') + `\n\n${queue.track.length > 5 ? `és még **${queue.track.length - 5}db zene...` : `A lejtátszási listában: **${queue.track.length}db zene van.`}`
+        ))
+
+    
+    }
 
 
 })
@@ -417,4 +461,4 @@ fs.writeFile("./money.json", JSON.stringify(money), (err) => {
     if(err) console.log(err);
 });
 
-bot.login(process.env.BOT_TOKEN);
+bot.login(tokenfile.token);
